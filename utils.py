@@ -99,3 +99,35 @@ def word_fun(the_data):
         freq_t = dict(collections.Counter(tmp_t.split()))
         out[i] = freq_t
     return out
+
+
+
+
+
+
+
+def stem_fun(var_in): 
+    from nltk.stem import PorterStemmer
+    ps = PorterStemmer()
+    split_ex = var_in.split()
+    t_l = list()
+    for word in split_ex:
+        tmp = ps.stem(word)
+        t_l.append(tmp)
+    tmp = ' '.join(t_l)
+    return tmp
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
