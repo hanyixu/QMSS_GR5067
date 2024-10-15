@@ -7,7 +7,7 @@ Created on Mon Sep 23 18:47:31 2024
 
 from utils import * #jd_fun, loop_fun
 
-the_path = "C:/Users/pathouli/Box Sync/myStuff/academia/columbia/socialSciences/GR5067/2024_fall/data/fishing/"
+the_path = "data/fishing/"
 
 file_name = "fish_121827061000.txt"
 
@@ -16,8 +16,6 @@ text = read_file(the_path + file_name)
 #text = " lets say we had [] { in our text!"
 #import re
 #text_pre = re.sub("[^A-Za-z']+", " ", text).strip()#strip remove trailing space
-
-
 
 
 # f = open(the_path + file_name, "r", encoding="UTF-8")
