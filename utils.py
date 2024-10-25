@@ -105,8 +105,17 @@ def xform_fun(df_in, m_in, n_in, sw_in):
         cv = CountVectorizer(ngram_range=(m_in, n_in))
     else:
         from sklearn.feature_extraction.text import TfidfVectorizer
-        cv = TfidfVectorizer(ngram_range=(m_in, n_in))
+        cv = TfidfVectorizer(ngram_range=(m_in, n_in), use_idf=False)
     x_f_data_t = pd.DataFrame(
         cv.fit_transform(df_in).toarray()) #be careful
     x_f_data_t.columns = cv.get_feature_names_out()
     return x_f_data_t
+
+def read_pickle(path_in, name_in):
+    import pickle
+    the_data_t = pickle.load(open(path_in + name_in + ".pk", "rb"))
+    return the_data_t
+
+def write_pickle(obj_in, path_in, name_in):
+    import pickle
+    pickle.dump(obj_in, open(path_in + name_in + ".pk", "wb"))
