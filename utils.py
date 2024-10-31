@@ -98,7 +98,7 @@ def stem_fun(var_in, sw_in):
     tmp = ' '.join(t_l)
     return tmp
 
-def xform_fun(df_in, m_in, n_in, sw_in):
+def xform_fun(df_in, m_in, n_in, sw_in, path_in):
     import pandas as pd
     if sw_in == "tf":
         from sklearn.feature_extraction.text import CountVectorizer 
@@ -108,6 +108,7 @@ def xform_fun(df_in, m_in, n_in, sw_in):
         cv = TfidfVectorizer(ngram_range=(m_in, n_in), use_idf=False)
     x_f_data_t = pd.DataFrame(
         cv.fit_transform(df_in).toarray()) #be careful
+    write_pickle(cv, path_in, sw_in)
     x_f_data_t.columns = cv.get_feature_names_out()
     return x_f_data_t
 
@@ -119,3 +120,99 @@ def read_pickle(path_in, name_in):
 def write_pickle(obj_in, path_in, name_in):
     import pickle
     pickle.dump(obj_in, open(path_in + name_in + ".pk", "wb"))
+    
+def cosine_fun(df_in_a, df_in_b, lab_in, path_in, name_in):
+    from sklearn.metrics.pairwise import cosine_similarity
+    import pandas as pd
+    cos_sim = pd.DataFrame(cosine_similarity(df_in_a, df_in_b))
+    cos_sim.index = lab_in
+    cos_sim.columns = lab_in
+    write_pickle(cos_sim, path_in, name_in)
+    return cos_sim
+
+def pca_fun(df_in, exp_var_in, name_in_t, path_in_t):
+    from sklearn.decomposition import PCA
+    import pandas as pd
+    pca_fun = PCA(n_components=exp_var_in)
+    xform_data_t = pd.DataFrame(pca_fun.fit_transform(df_in))
+    exp_var = sum(pca_fun.explained_variance_ratio_)
+    t_len = len(pca_fun.explained_variance_ratio_)
+    print ("explained variance is:", exp_var, "with", t_len, "components")
+    write_pickle(pca_fun, path_in_t, name_in_t)
+    return xform_data_t
+
+def extract_embeddings_pre(df_in, out_path_i, name_in):
+    #https://code.google.com/archive/p/word2vec/
+    #https://pypi.org/project/gensim/
+    #pip install gensim
+    #name_in = 'models/word2vec_sample/pruned.word2vec.txt'
+    import pandas as pd
+    from nltk.data import find
+    from gensim.models import KeyedVectors
+    import pickle
+    def get_score(var):
+        import numpy as np
+        tmp_arr = list()
+        for word in var:
+            try:
+                tmp_arr.append(list(my_model_t.get_vector(word)))
+            except:
+                pass
+        tmp_arr
+        return np.mean(np.array(tmp_arr), axis=0)
+    word2vec_sample = str(find(name_in))
+    my_model_t = KeyedVectors.load_word2vec_format(
+        word2vec_sample, binary=False)
+    # word_dict = my_model.key_to_index
+    tmp_out = df_in.str.split().apply(get_score)
+    tmp_data = tmp_out.apply(pd.Series).fillna(0)
+    pickle.dump(my_model_t, open(out_path_i + "embeddings.pkl", "wb"))
+    pickle.dump(tmp_data, open(out_path_i + "embeddings_df.pkl", "wb" ))
+    return tmp_data, my_model_t
+
+def domain_train(df_in, path_in, name_in):
+    #domain specific
+    import pandas as pd
+    import gensim
+    def get_score(var):
+        import numpy as np
+        tmp_arr = list()
+        for word in var:
+            try:
+                tmp_arr.append(list(model.wv.get_vector(word)))
+            except:
+                pass
+        tmp_arr
+        return np.mean(np.array(tmp_arr), axis=0)
+    model = gensim.models.Word2Vec(df_in.str.split())
+    model.save(path_in + 'body.embedding')
+    #call up the model
+    #load_model = gensim.models.Word2Vec.load('body.embedding')
+    model.wv.similarity('fish','river')
+    tmp_data = pd.DataFrame(df_in.str.split().apply(get_score))
+    return tmp_data, model
+
+def chi_fun(df_in, lab_in, k_in, p_in, n_in, stat_sig):
+    from sklearn.feature_selection import chi2, SelectKBest
+    import pandas as pd
+    feat_sel = SelectKBest(score_func=chi2, k=k_in)
+    dim_data = pd.DataFrame(feat_sel.fit_transform(df_in, lab_in))
+    p_val = pd.DataFrame(list(feat_sel.pvalues_))
+    p_val.columns = ["pval"]
+    feat_index = list(p_val[p_val.pval <= stat_sig].index)
+    dim_data = dim_data[feat_index]
+    feature_names = df_in.columns[feat_index]
+    dim_data.columns = feature_names
+    write_pickle(feat_sel, p_in, n_in)
+    write_pickle(dim_data, p_in, "chi_data_" + n_in)
+    return dim_data, feat_sel
+
+def pca_fun(df_in, ratio_in, path_o, n_in):
+    import pandas as pd
+    from sklearn.decomposition import PCA
+    pca = PCA(n_components=ratio_in)
+    dim_red = pd.DataFrame(pca.fit_transform(df_in))
+    exp_var = sum(pca.explained_variance_ratio_)
+    print("Explained variance: ", exp_var)
+    write_pickle(pca, path_o, n_in)
+    return exp_var
