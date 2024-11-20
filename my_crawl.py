@@ -8,6 +8,4 @@ Created on Wed Dec  1 07:24:27 2021
 from crawler import write_crawl_results
 
 the_data = write_crawl_results(
-    ["Hanyi Xu, Syracuse"], 20)
-
-
+    ["sable offshore santa barbara"], 20)

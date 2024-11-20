@@ -130,17 +130,6 @@ def cosine_fun(df_in_a, df_in_b, lab_in, path_in, name_in):
     write_pickle(cos_sim, path_in, name_in)
     return cos_sim
 
-def pca_fun(df_in, exp_var_in, name_in_t, path_in_t):
-    from sklearn.decomposition import PCA
-    import pandas as pd
-    pca_fun = PCA(n_components=exp_var_in)
-    xform_data_t = pd.DataFrame(pca_fun.fit_transform(df_in))
-    exp_var = sum(pca_fun.explained_variance_ratio_)
-    t_len = len(pca_fun.explained_variance_ratio_)
-    print ("explained variance is:", exp_var, "with", t_len, "components")
-    write_pickle(pca_fun, path_in_t, name_in_t)
-    return xform_data_t
-
 def extract_embeddings_pre(df_in, out_path_i, name_in):
     #https://code.google.com/archive/p/word2vec/
     #https://pypi.org/project/gensim/
@@ -208,11 +197,79 @@ def chi_fun(df_in, lab_in, k_in, p_in, n_in, stat_sig):
     return dim_data, feat_sel
 
 def pca_fun(df_in, ratio_in, path_o, n_in):
-    import pandas as pd
     from sklearn.decomposition import PCA
+    import pandas as pd
     pca = PCA(n_components=ratio_in)
     dim_red = pd.DataFrame(pca.fit_transform(df_in))
     exp_var = sum(pca.explained_variance_ratio_)
-    print("Explained variance: ", exp_var)
+    print ("Explained variance", exp_var)
     write_pickle(pca, path_o, n_in)
-    return exp_var
+    return dim_red
+
+def cos_fun(df_a, df_b, label_in):
+    from sklearn.metrics.pairwise import cosine_similarity
+    import pandas as pd
+    cos_sim = pd.DataFrame(cosine_similarity(
+        df_a, df_b))
+    try:
+        cos_sim.index = label_in
+        cos_sim.columns = label_in
+    except:
+        pass
+    return cos_sim
+
+def model_fun(df_in, lab_in, g_in, t_s, sw_in, p_o):
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import precision_recall_fscore_support
+    import pandas as pd
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.naive_bayes import GaussianNB
+    from sklearn.model_selection import GridSearchCV
+    
+    X_train, X_test, y_train, y_test = train_test_split(
+        df_in, lab_in, test_size=t_s, random_state=42)
+    
+    if sw_in == "rf":
+        model = RandomForestClassifier(random_state=123)
+    elif sw_in == "gnb":
+        model = GaussianNB()
+    
+    clf = GridSearchCV(model, g_in)
+    clf.fit(X_train, y_train)
+    
+    best_perf = clf.best_score_
+    print (best_perf)
+    best_params = clf.best_params_
+    print (best_params)
+    
+    if sw_in == "rf":
+        model = RandomForestClassifier(random_state=123, **best_params)
+    elif sw_in == "gnb":
+        model = GaussianNB(**best_params)
+    
+    X_train_val, X_test_val, y_train_val, y_test_val = train_test_split(
+        X_test, y_test, test_size=0.10, random_state=42)
+    
+    model.fit(X_train_val, y_train_val)
+    write_pickle(model, p_o, sw_in)
+    y_pred = model.predict(X_test_val)
+    y_pred_likelihood = pd.DataFrame(
+        model.predict_proba(X_test_val))
+    y_pred_likelihood.columns = model.classes_
+    
+    metrics = pd.DataFrame(precision_recall_fscore_support(
+        y_test_val, y_pred, average='weighted'))
+    metrics.index = ["precision", "recall", "fscore", None]
+    
+    #feature importance
+    try:
+        feat_imp = pd.DataFrame(model.feature_importances_)
+        feat_imp.index = X_train_val.columns
+        feat_imp.columns = ["score"]
+        feat_imp.to_csv(p_o + sw_in + "_m.csv")
+        perc_prop = len(feat_imp[feat_imp["score"] > 0]) / len(feat_imp) * 100
+        print (perc_prop)
+    except:
+        print ("Not transparent")
+        pass
+    return model
