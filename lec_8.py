@@ -7,8 +7,8 @@ Created on Mon Sep 23 18:47:31 2024
 
 from utils import *
 
-the_path = "data/"
-o_path = "output/"
+the_path = "C:/Users/pathouli/Box Sync/myStuff/academia/columbia/socialSciences/GR5067/2024_fall/data/"
+o_path = "C:/Users/pathouli/Box Sync/myStuff/academia/columbia/socialSciences/GR5067/2024_fall/output/"
 
 # the_data = file_crawler(the_path)
 

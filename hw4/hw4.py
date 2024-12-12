@@ -14,18 +14,18 @@ from sklearn.metrics import precision_recall_fscore_support
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import GridSearchCV
+import time
 
-from sklearn.feature_extraction.text import TfidfVectorizer
 
+#=========timer=========
+start_time_1 = time.time()
+#=========timer=========
 
 
 data = read_pickle("", "hw4")
-t_form_data = xform_fun(data["body"], 1, 1, "tf", "")
+t_form_data = xform_fun(data["body"], 1, 3, "tf", "")
 
 chi_data, chi_m = chi_fun(t_form_data, data["label"],len(t_form_data.columns), "", "tf", 0.01) 
-
-
-#parameters = {"var_smoothing": [1e-9, 1e-7, 1e-5, 1e-3]}
 
 parameters = {
     'max_depth': [3,5,7,10],
@@ -34,50 +34,49 @@ parameters = {
     'min_samples_leaf': [1, 2, 4]
 }
 
-m = model_fun(chi_data, data.label, parameters, 0.80, "rf", "")
 
+X_train, X_test, y_train, y_test = train_test_split(
+    chi_data, data.label, test_size=0.75, random_state=110)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
-parameter = {
-    'n_estimators': [50, 100, 200],
-    'max_depth': [None, 10, 20, 30],
-    'min_samples_leaf': [1, 2, 4],
-    'bootstrap': [True, False],
-}
-
-
-
-model_grid = GridSearchCV(
-    estimator=model,
-    param_grid=parameter,
-    scoring='accuracy',
-    cv=2
-)
-
-model_grid.fit(X_train, y_train)
-
-
-best_perf = model_grid.best_score_
+model = RandomForestClassifier(random_state=110)
+    
+clf = GridSearchCV(model, parameters)
+clf.fit(X_train, y_train)
+    
+best_perf = clf.best_score_
 print (best_perf)
-best_params = model_grid.best_params_
+best_params = clf.best_params_
 print (best_params)
-"""
+    
+model = RandomForestClassifier(random_state=110, **best_params)
+
+#=========timer=========
+end_time_1 = time.time()
+print("First timer: ")
+print(end_time_1 - start_time_1)
+start_time_2 = time.time()
+#=========timer=========
+
+#========done gridsearch========
+
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+y_pred_likelihood = pd.DataFrame(model.predict_proba(X_test))
+y_pred_likelihood.columns = model.classes_
+
+
+metrics = pd.DataFrame(precision_recall_fscore_support(y_test, y_pred, average='weighted'))
+metrics.index = ["precision", "recall", "fscore", None]
+
+
+#=========timer=========
+end_time_2 = time.time()
+print("Second timer: ")
+print(end_time_2 - start_time_2)
+#=========timer=========
+
+
 
 
 

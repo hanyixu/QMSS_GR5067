@@ -7,8 +7,8 @@ Created on Mon Sep 23 18:47:31 2024
 
 from utils import *
 
-the_path = "data/"
-o_path = "output/"
+the_path = "C:/Users/pathouli/Box Sync/myStuff/academia/columbia/socialSciences/GR5067/2024_fall/data/"
+o_path = "C:/Users/pathouli/Box Sync/myStuff/academia/columbia/socialSciences/GR5067/2024_fall/output/"
 
 # the_data = file_crawler(the_path)
 
@@ -41,17 +41,18 @@ o_path = "output/"
 
 the_data = read_pickle(o_path, "the_data")
 
-t_form_data = xform_fun(the_data["body_sw"], 1, 1, "tf", o_path)
+t_form_data = xform_fun(the_data["body_sw_stem"], 1, 3, "tf", o_path)
 
 chi_data, chi_m = chi_fun(t_form_data, the_data.label,
-                      len(t_form_data.columns), o_path, "tf", 0.01) 
-
-sw = "gnb"
-#parameters = {"n_estimators": [50, 100], "max_depth": [None, 10]}
-parameters = {"var_smoothing": [1e-9, 1e-7, 1e-5, 1e-3]}
-
-m = model_fun(chi_data, the_data.label, parameters, 0.80, sw, o_path)
+                      len(t_form_data.columns), o_path, "chi", 0.05) 
 
 # vec_data, model_fun = extract_embeddings_pre(
 #     the_data["body"], o_path, 'models/word2vec_sample/pruned.word2vec.txt')
+
+sw = "rf"
+parameters = {"n_estimators": [50, 100], "max_depth": [None, 10]}
+#parameters = {"var_smoothing": [1e-9, 1e-7, 1e-5, 1e-3]}
+
+m = model_fun(chi_data, the_data.label, parameters, 0.80, sw, o_path)
+
 

@@ -7,7 +7,7 @@ Created on Mon Sep 23 18:47:31 2024
 
 from utils import *
 
-the_path = "data/"
+the_path = "C:/Users/pathouli/Box Sync/myStuff/academia/columbia/socialSciences/GR5067/2024_fall/data/"
 
 the_data = file_crawler(the_path)
 

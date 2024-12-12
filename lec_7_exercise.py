@@ -13,7 +13,7 @@ might be
 """
 
 from utils import *
-o_path = "output/"
+o_path = "C:/Users/pathouli/Box Sync/myStuff/academia/columbia/socialSciences/GR5067/2024_fall/output/"
 
 the_data_ex = read_pickle(o_path, "data_fun")
 
